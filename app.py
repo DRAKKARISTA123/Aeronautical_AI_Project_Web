@@ -48,11 +48,12 @@ with tab1:
         
         # --- Stall Model Logic ---
         stall_angle = 14.0
+        max_cl = 0.11 * stall_angle + 0.2  # Exactly 1.74 at boundary for continuity
+        
         if alpha_t1 <= stall_angle:
             cl_calculated = 0.11 * alpha_t1 + 0.2
             stall_status = "Attached Flow (Normal)"
         else:
-            max_cl = 0.11 * stall_angle + 0.2
             excess_alpha = alpha_t1 - stall_angle
             cl_calculated = max_cl - 0.015 * (excess_alpha ** 1.5)
             stall_status = "⚠️ AIRFOIL STALLED (Flow Separation)"
@@ -89,22 +90,25 @@ with tab1:
 # ==========================================
 with tab2:
     st.header("Machine Learning Airfoil Performance Predictor")
-    st.write("Predict Lift ($C_L$) and Drag ($C_D$) coefficients with realistic post-stall physics and drag spiking.")
+    st.write("Predict Lift ($C_L$) and Drag ($C_D$) coefficients with transparent step-by-step physics validation.")
     
     alpha = st.slider("Angle of Attack (Alpha - degrees)", -5.0, 25.0, 4.0, key="t2_alpha")
     
-    # Advanced Stall & Drag Polar Logic
+    # Advanced Stall & Drag Polar Constants
     stall_angle = 14.0
+    max_cl = 0.11 * stall_angle + 0.2  # 1.74
+    cd_0 = 0.008
+    k_induced = 0.045
+    
     if alpha <= stall_angle:
         cl_pred = 0.11 * alpha + 0.2  
-        cd_pred = 0.008 + 0.045 * (cl_pred ** 2) # Standard parabolic drag polar
+        cd_pred = cd_0 + k_induced * (cl_pred ** 2)
         flow_state_t2 = "Attached Flow (Linear Region)"
     else:
-        max_cl = 0.11 * stall_angle + 0.2
         excess_alpha = alpha - stall_angle
-        cl_pred = max_cl - 0.015 * (excess_alpha ** 1.5) # Smooth lift drop-off
-        cd_base = 0.008 + 0.045 * (max_cl ** 2)
-        cd_spike = 0.08 * (excess_alpha ** 1.8)         # Sharp drag spike post-stall
+        cl_pred = max_cl - 0.015 * (excess_alpha ** 1.5) 
+        cd_base = cd_0 + k_induced * (max_cl ** 2)
+        cd_spike = 0.08 * (excess_alpha ** 1.8)
         cd_pred = cd_base + cd_spike
         flow_state_t2 = "⚠️ Stall Region (Separation Drag Spike)"
         
@@ -114,12 +118,12 @@ with tab2:
     col_a.metric("Predicted Lift Coefficient (Cl)", f"{cl_pred:.3f}")
     col_b.metric("Predicted Drag Coefficient (Cd)", f"{cd_pred:.3f}")
     
-    # Generate complete curve arrays
-    alphas_range = np.linspace(-5, 25, 100)
+    # Generate continuous curve arrays with exact boundary match
+    alphas_range = np.linspace(-5, 25, 150)
     cls_range = np.where(
         alphas_range <= stall_angle, 
         0.11 * alphas_range + 0.2, 
-        (0.11 * stall_angle + 0.2) - 0.015 * ((alphas_range - stall_angle) ** 1.5)
+        max_cl - 0.015 * ((alphas_range - stall_angle) ** 1.5)
     )
     
     fig, ax = plt.subplots(figsize=(8, 4))
@@ -133,17 +137,17 @@ with tab2:
     
     st.pyplot(fig)
 
-    # --- Live Step-by-Step Math Breakdown for Tab 2 ---
+    # --- Fully Transparent Step-by-Step Math Breakdown for Tab 2 ---
     st.markdown("---")
     st.subheader("📝 Step-by-Step Airfoil Calculation Breakdown")
-    st.write("Here is the exact mathematical model evaluated live using your current Angle of Attack:")
+    st.write("Here is the fully expanded numerical substitution evaluated live using your current Angle of Attack:")
     
     if alpha <= stall_angle:
-        st.latex(rf"1. \text{{ Lift Coefficient (Pre-Stall): }} C_L = 0.11 \times ({alpha}) + 0.2 = {cl_pred:.3f}")
-        st.latex(rf"2. \text{{ Drag Coefficient (Parabolic Polar): }} C_D = 0.008 + 0.045 \times ({cl_pred:.3f})^2 = {cd_pred:.3f}")
+        st.latex(rf"1. \text{{ Lift Coefficient (Pre-Stall): }} C_L = 0.11 \times ({alpha:.2f}) + 0.2 = {cl_pred:.3f}")
+        st.latex(rf"2. \text{{ Drag Coefficient (Parabolic Polar): }} C_D = {cd_0} + {k_induced} \times ({cl_pred:.3f})^2 = {cd_pred:.3f}")
     else:
-        st.latex(rf"1. \text{{ Lift Coefficient (Post-Stall Decay): }} C_L = {max_cl:.3f} - 0.015 \times ({alpha} - 14)^{{1.5}} = {cl_pred:.3f}")
-        st.latex(rf"2. \text{{ Drag Coefficient (Separation Spike): }} C_D = C_{{d0}} + k C_L^2 + \text{{Spike}} = {cd_pred:.3f}")
+        st.latex(rf"1. \text{{ Lift Coefficient (Post-Stall Decay): }} C_L = {max_cl:.3f} - 0.015 \times ({alpha:.2f} - 14)^{{1.5}} = {cl_pred:.3f}")
+        st.latex(rf"2. \text{{ Drag Coefficient (Spike Substitution): }} C_D = {cd_0} + {k_induced} \times ({max_cl:.3f})^2 + 0.08 \times ({excess_alpha:.2f})^{{1.8}} = {cd_pred:.3f}")
 
 # ==========================================
 # TAB 3: FLIGHT TELEMETRY ANALYSIS
