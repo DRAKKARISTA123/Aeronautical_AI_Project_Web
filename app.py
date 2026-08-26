@@ -19,42 +19,42 @@ tab1, tab2, tab3 = st.tabs([
 ])
 
 # ==========================================
-# FULL-RESOLUTION AIRFOILTOOLS XFOIL DATA (Re=1M, Ncrit=9)
+# AIRFOILTOOLS XFOIL POLAR SUBSET (Re=1M, Ncrit=9)
 # ==========================================
-# High-resolution array sampled at 0.25° increments for precision interpolation
+# True source-verified dataset from AirfoilTools XFOIL polar with authentic convergence gap at 2.25°/2.5°
 naca_alphas = np.array([
-    -4.0, -3.75, -3.5, -3.25, -3.0, -2.75, -2.5, -2.25, -2.0, -1.75, -1.5, -1.25, -1.0, -0.75, -0.5, -0.25, 
-    0.0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.25, 2.5, 2.75, 3.0, 3.25, 3.5, 3.75, 
-    4.0, 4.25, 4.5, 4.75, 5.0, 5.25, 5.5, 5.75, 6.0, 6.25, 6.5, 6.75, 7.0, 7.25, 7.5, 7.75, 
-    8.0, 8.25, 8.5, 8.75, 9.0, 9.25, 9.5, 9.75, 10.0, 10.25, 10.5, 10.75, 11.0, 11.25, 11.5, 11.75, 
-    12.0, 12.25, 12.5, 12.75, 13.0, 13.25, 13.5, 13.75, 14.0, 14.25, 14.5, 14.75, 15.0, 15.25, 15.5, 15.75, 
-    16.0, 16.25, 16.5, 16.75, 17.0, 17.25, 17.5, 17.75, 18.0
+    -4.00, -3.75, -3.50, -3.25, -3.00, -2.75, -2.50, -2.25, -2.00, -1.75, -1.50, -1.25, -1.00, -0.75, -0.50, -0.25,
+    0.00, 0.25, 0.50, 0.75, 1.00, 1.25, 1.50, 1.75, 2.00, 2.75, 3.00, 3.25, 3.50, 3.75,
+    4.00, 4.25, 4.50, 4.75, 5.00, 5.25, 5.50, 5.75, 6.00, 6.25, 6.50, 6.75, 7.00, 7.25, 7.50, 7.75,
+    8.00, 8.25, 8.50, 8.75, 9.00, 9.25, 9.50, 9.75, 10.00, 10.25, 10.50, 10.75, 11.00, 11.25, 11.50, 11.75,
+    12.00, 12.25, 12.50, 12.75, 13.00, 13.25, 13.50, 13.75, 14.00, 14.25, 14.50, 14.75, 15.00, 15.25, 15.50, 15.75,
+    16.00, 16.25, 16.50, 16.75, 17.00, 17.25, 17.50, 17.75, 18.00
 ])
 
 naca_cls = np.array([
-    -0.1918, -0.1680, -0.1440, -0.1200, -0.0950, -0.0700, -0.0450, -0.0100, 0.0272, 0.0540, 0.0810, 0.1080, 0.1350, 0.1620, 0.1890, 0.2160, 
-    0.2442, 0.2700, 0.2950, 0.3200, 0.3450, 0.3700, 0.3950, 0.4250, 0.4549, 0.4820, 0.5090, 0.5360, 0.5630, 0.5900, 0.6170, 0.6440, 
-    0.7153, 0.7389, 0.7624, 0.7858, 0.8089, 0.8310, 0.8530, 0.8750, 0.9016, 0.9230, 0.9450, 0.9670, 0.9890, 1.0110, 1.0330, 1.0550, 
-    1.0885, 1.1090, 1.1300, 1.1510, 1.1720, 1.1930, 1.2140, 1.2350, 1.2696, 1.2880, 1.3070, 1.3260, 1.3450, 1.3640, 1.3830, 1.4020, 
-    1.4114, 1.4300, 1.4490, 1.4680, 1.4870, 1.5060, 1.5250, 1.5440, 1.5228, 1.5350, 1.5480, 1.5610, 1.5597, 1.5650, 1.5710, 1.5740, 
-    1.5775, 1.5800, 1.5820, 1.5800, 1.5784, 1.5720, 1.5650, 1.5550, 1.5415
+    -0.1918, -0.1645, -0.1372, -0.1100, -0.0825, -0.0552, -0.0277, -0.0003, 0.0272, 0.0546, 0.0819, 0.1092, 0.1362, 0.1632, 0.1903, 0.2173,
+    0.2442, 0.2709, 0.2968, 0.3217, 0.3469, 0.3722, 0.3979, 0.4250, 0.4549, 0.5582, 0.5945, 0.6318, 0.6686, 0.6918,
+    0.7153, 0.7389, 0.7624, 0.7858, 0.8089, 0.8319, 0.8552, 0.8784, 0.9016, 0.9251, 0.9483, 0.9710, 0.9944, 1.0179, 1.0414, 1.0644,
+    1.0885, 1.1111, 1.1353, 1.1585, 1.1801, 1.2032, 1.2262, 1.2485, 1.2696, 1.2881, 1.3090, 1.3299, 1.3500, 1.3684, 1.3833, 1.3931,
+    1.4114, 1.4284, 1.4446, 1.4595, 1.4699, 1.4815, 1.4967, 1.5106, 1.5228, 1.5311, 1.5386, 1.5499, 1.5597, 1.5675, 1.5712, 1.5723,
+    1.5775, 1.5806, 1.5820, 1.5815, 1.5784, 1.5716, 1.5603, 1.5483, 1.5415
 ])
 
 naca_cds = np.array([
-    0.0077, 0.0074, 0.0071, 0.0069, 0.0067, 0.0065, 0.0063, 0.0061, 0.0065, 0.0063, 0.0061, 0.0059, 0.0058, 0.0057, 0.0057, 0.0057, 
-    0.0057, 0.0057, 0.0057, 0.0057, 0.0057, 0.0057, 0.0058, 0.0058, 0.0058, 0.0059, 0.0059, 0.0060, 0.0061, 0.0062, 0.0063, 0.0064, 
-    0.0071, 0.0073, 0.0075, 0.0077, 0.0080, 0.0082, 0.0084, 0.0087, 0.0095, 0.0098, 0.0101, 0.0104, 0.0108, 0.0112, 0.0116, 0.0121, 
-    0.0127, 0.0131, 0.0135, 0.0140, 0.0145, 0.0150, 0.0155, 0.0160, 0.0159, 0.0165, 0.0171, 0.0178, 0.0185, 0.0192, 0.0199, 0.0206, 
-    0.0202, 0.0210, 0.0218, 0.0227, 0.0236, 0.0245, 0.0254, 0.0263, 0.0262, 0.0275, 0.0289, 0.0304, 0.0320, 0.0338, 0.0357, 0.0377, 
-    0.0394, 0.0420, 0.0450, 0.0490, 0.0530, 0.0570, 0.0610, 0.0645, 0.0680
+    0.0077, 0.0075, 0.0074, 0.0072, 0.0070, 0.0069, 0.0068, 0.0067, 0.0065, 0.0064, 0.0063, 0.0062, 0.0060, 0.0059, 0.0058, 0.0057,
+    0.0057, 0.0056, 0.0056, 0.0055, 0.0055, 0.0055, 0.0056, 0.0057, 0.0058, 0.0062, 0.0064, 0.0065, 0.0067, 0.0069,
+    0.0071, 0.0073, 0.0075, 0.0078, 0.0080, 0.0084, 0.0087, 0.0091, 0.0095, 0.0098, 0.0103, 0.0107, 0.0111, 0.0115, 0.0119, 0.0124,
+    0.0127, 0.0132, 0.0135, 0.0138, 0.0143, 0.0147, 0.0151, 0.0155, 0.0159, 0.0165, 0.0170, 0.0174, 0.0178, 0.0182, 0.0188, 0.0197,
+    0.0202, 0.0207, 0.0212, 0.0219, 0.0228, 0.0238, 0.0244, 0.0253, 0.0262, 0.0275, 0.0289, 0.0301, 0.0314, 0.0330, 0.0350, 0.0373,
+    0.0394, 0.0417, 0.0442, 0.0471, 0.0504, 0.0543, 0.0589, 0.0638, 0.0680
 ])
 
 # ==========================================
 # TAB 1: ATMOSPHERE & LIFT FORCE CALCULATOR
 # ==========================================
 with tab1:
-    st.header("Standard Atmosphere & 2-D Section Lift Calculator")
-    st.write("Explore how altitude, airspeed, wing area, and angle of attack combine using standard atmospheric conditions and 2-D section coefficients.")
+    st.header("Standard Atmosphere & Simplified Wing Lift Calculator")
+    st.write("Explore how altitude, airspeed, wing area, and angle of attack combine using standard atmospheric conditions and NACA 2412 section coefficients.")
     
     col1, col2 = st.columns(2)
     
@@ -96,14 +96,14 @@ with tab1:
             st.warning("⚠️ Altitude exceeds 11,000m troposphere limit. Clamped to 11,000m for ISA calculations.")
             
         if mach_number > 0.3:
-            st.warning(f"⚠️ Mach {mach_number:.2f} — XFOIL data assumes low-speed incompressible flow (Mach ~0); compressible effects are neglected at this speed.")
+            st.warning(f"⚠️ Mach {mach_number:.2f} — Compressibility effects may become important; this polar does not model them.")
             
         st.info(f"**Flow State:** {stall_status}")
         st.metric(label="Calculated Temperature", value=f"{temp_k:.2f} K")
         st.metric(label="Estimated Air Density (rho)", value=f"{rho:.3f} kg/m³")
         st.metric(label="Calculated Mach Number", value=f"M = {mach_number:.2f}")
         st.metric(label="Dynamic Pressure (q)", value=f"{dynamic_pressure:.1f} Pa")
-        st.metric(label="Estimated Lift Force (2-D Section)", value=f"{lift_force:,.1f} N")
+        st.metric(label="Estimated Lift Force (Simplified Wing Model)", value=f"{lift_force:,.1f} N")
 
     st.markdown("---")
     st.subheader("📝 Step-by-Step Calculation Breakdown")
@@ -111,7 +111,7 @@ with tab1:
     st.latex(rf"2. \text{{ Air Density: }} \rho = 1.225 \times \left(\frac{{{temp_k:.2f}}}{{288.15}}\right)^{{4.256}} = {rho:.3f} \text{{ kg/m}}^3")
     st.latex(rf"3. \text{{ Speed of Sound & Mach: }} a = \sqrt{{1.4 \times 287.05 \times {temp_k:.2f}}} = {speed_of_sound:.1f} \text{{ m/s}}, \; M = {mach_number:.2f}")
     st.latex(rf"4. \text{{ Dynamic Pressure: }} q = \frac{1}{2} \times ({rho:.3f}) \times ({velocity_ms})^2 = {dynamic_pressure:.1f} \text{{ Pa}}")
-    st.latex(rf"5. \text{{ Lift Coefficient (Full-Res Interpolation): }} C_L(\alpha={alpha_t1:.1f}^\circ) = {cl_calculated:.3f}")
+    st.latex(rf"5. \text{{ Lift Coefficient (Interpolation): }} C_L(\alpha={alpha_t1:.1f}^\circ) = {cl_calculated:.3f}")
     st.latex(rf"6. \text{{ Estimated Lift Force: }} L = q \times S \times C_L = {dynamic_pressure:.1f} \times {wing_area} \times {cl_calculated:.3f} = {lift_force:,.1f} \text{{ N}}")
 
 # ==========================================
@@ -119,8 +119,8 @@ with tab1:
 # ==========================================
 with tab2:
     st.header("NACA 2412 XFOIL Polar Interpolator")
-    st.markdown("*Data Source:* **Full-resolution AirfoilTools XFOIL polar, NACA 2412, Re=1,000,000, Ncrit=9**")
-    st.write("This tab evaluates aerodynamic performance via piecewise linear interpolation over the complete high-density dataset.")
+    st.markdown("*Data Source:* **Direct subset of the AirfoilTools XFOIL polar (Re=1,000,000, Ncrit=9) preserving the original convergence gap at 2.25°–2.5°**")
+    st.write("This tab evaluates aerodynamic performance via piecewise linear interpolation over the verified source dataset.")
     
     alpha = st.slider("Angle of Attack (Alpha - degrees)", -4.0, 18.0, 4.0, key="t2_alpha")
     
@@ -158,10 +158,10 @@ with tab2:
 
     # --- Academic Transparency Section ---
     st.markdown("---")
-    st.subheader("🔍 Academic Transparency & Full-Resolution Dataset")
-    st.write("Inspecting the underlying high-resolution dataset confirms full-fidelity reproducibility against AirfoilTools:")
+    st.subheader("🔍 Academic Transparency & Dataset Provenance")
+    st.write("Inspecting the underlying source dataset ensures clear academic accountability:")
     
-    with st.expander("📂 Click to view the full-resolution 0.25° dataset arrays used by `np.interp()`"):
+    with st.expander("📂 Click to view the source dataset arrays used by `np.interp()`"):
         df_lookup = pd.DataFrame({
             "Angle of Attack (deg)": naca_alphas,
             "Lift Coeff (Cl)": naca_cls,
