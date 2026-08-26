@@ -23,7 +23,7 @@ tab1, tab2, tab3 = st.tabs([
 # ==========================================
 with tab1:
     st.header("Standard Atmosphere & Basic Lift Calculator")
-    st.write("Calculations based on the ISA Troposphere model (John Anderson, *Introduction to Flight*).")
+    st.write("Explore how altitude and airspeed affect atmospheric properties and dynamic pressure in real time.")
     
     col1, col2 = st.columns(2)
     
@@ -31,22 +31,22 @@ with tab1:
         altitude_m = st.slider("Altitude (meters)", 0, 11000, 5217)
         velocity_ms = st.slider("Airspeed (m/s)", 10, 300, 234)
         
+        # Display the visible formulas used for the calculations
+        st.markdown("---")
+        st.subheader("Formulas Used:")
+        st.latex(r"T = T_0 - (\lambda \cdot h)")
+        st.latex(r"\rho = \rho_0 \cdot \left(\frac{T}{T_0}\right)^{4.256}")
+        st.latex(r"q = \frac{1}{2} \rho V^2")
+        
     with col2:
-        # --- FORMULA 1: Temperature at Altitude ---
-        # T = T_0 - (lambda * h)
-        # T_0 = 288.15 K, lambda = 0.0065 K/m
-        temp_0 = 288.15 
-        temp_k = temp_0 - (0.0065 * altitude_m)
+        # --- Calculations ---
+        temp_0 = 288.15 # Sea-level standard temperature (K)
+        temp_k = temp_0 - (0.0065 * altitude_m) # Temperature at altitude
         
-        # --- FORMULA 2: Air Density (ISA Troposphere) ---
-        # rho = rho_0 * (T / T_0) ** 4.256
-        # rho_0 = 1.225 kg/m^3
-        rho_0 = 1.225   
-        rho = rho_0 * ((temp_k / temp_0) ** 4.256) 
+        rho_0 = 1.225   # Sea-level standard density (kg/m^3)
+        rho = rho_0 * ((temp_k / temp_0) ** 4.256) # Air density
         
-        # --- FORMULA 3: Dynamic Pressure ---
-        # q = 0.5 * rho * V^2
-        dynamic_pressure = 0.5 * rho * (velocity_ms ** 2)
+        dynamic_pressure = 0.5 * rho * (velocity_ms ** 2) # Dynamic pressure (Pa)
         
         # Display Results
         st.metric(label="Calculated Temperature", value=f"{temp_k:.2f} K")
@@ -62,7 +62,6 @@ with tab2:
     
     alpha = st.slider("Angle of Attack (Alpha - degrees)", -5.0, 20.0, 4.0)
     
-    # Physics-informed mock AI calculations
     cl_pred = 0.09 * alpha + 0.2  
     cd_pred = 0.01 + 0.0005 * (alpha ** 2) 
     
@@ -70,7 +69,6 @@ with tab2:
     col_a.metric("Predicted Lift Coefficient (Cl)", f"{cl_pred:.3f}")
     col_b.metric("Predicted Drag Coefficient (Cd)", f"{cd_pred:.3f}")
     
-    # Generate Lift Curve Slope plot
     alphas_range = np.linspace(-5, 20, 50)
     cls_range = 0.09 * alphas_range + 0.2
     
