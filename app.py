@@ -98,6 +98,7 @@ with tab2:
     if alpha <= stall_angle:
         cl_pred = 0.11 * alpha + 0.2  
         cd_pred = 0.008 + 0.045 * (cl_pred ** 2) # Standard parabolic drag polar
+        flow_state_t2 = "Attached Flow (Linear Region)"
     else:
         max_cl = 0.11 * stall_angle + 0.2
         excess_alpha = alpha - stall_angle
@@ -105,7 +106,10 @@ with tab2:
         cd_base = 0.008 + 0.045 * (max_cl ** 2)
         cd_spike = 0.08 * (excess_alpha ** 1.8)         # Sharp drag spike post-stall
         cd_pred = cd_base + cd_spike
+        flow_state_t2 = "⚠️ Stall Region (Separation Drag Spike)"
         
+    st.info(f"**Airfoil Flow State:** {flow_state_t2}")
+    
     col_a, col_b = st.columns(2)
     col_a.metric("Predicted Lift Coefficient (Cl)", f"{cl_pred:.3f}")
     col_b.metric("Predicted Drag Coefficient (Cd)", f"{cd_pred:.3f}")
@@ -128,6 +132,18 @@ with tab2:
     ax.legend(loc="upper left")
     
     st.pyplot(fig)
+
+    # --- Live Step-by-Step Math Breakdown for Tab 2 ---
+    st.markdown("---")
+    st.subheader("📝 Step-by-Step Airfoil Calculation Breakdown")
+    st.write("Here is the exact mathematical model evaluated live using your current Angle of Attack:")
+    
+    if alpha <= stall_angle:
+        st.latex(rf"1. \text{{ Lift Coefficient (Pre-Stall): }} C_L = 0.11 \times ({alpha}) + 0.2 = {cl_pred:.3f}")
+        st.latex(rf"2. \text{{ Drag Coefficient (Parabolic Polar): }} C_D = 0.008 + 0.045 \times ({cl_pred:.3f})^2 = {cd_pred:.3f}")
+    else:
+        st.latex(rf"1. \text{{ Lift Coefficient (Post-Stall Decay): }} C_L = {max_cl:.3f} - 0.015 \times ({alpha} - 14)^{{1.5}} = {cl_pred:.3f}")
+        st.latex(rf"2. \text{{ Drag Coefficient (Separation Spike): }} C_D = C_{{d0}} + k C_L^2 + \text{{Spike}} = {cd_pred:.3f}")
 
 # ==========================================
 # TAB 3: FLIGHT TELEMETRY ANALYSIS
