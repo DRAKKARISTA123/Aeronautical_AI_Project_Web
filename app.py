@@ -28,28 +28,34 @@ with tab1:
     col1, col2 = st.columns(2)
     
     with col1:
-        altitude_m = st.slider("Altitude (meters)", 0, 11000, 5217, key="t1_alt")
+        altitude_m = st.slider("Altitude (meters)", 0, 15000, 5217, key="t1_alt")
         velocity_ms = st.slider("Airspeed (m/s)", 10, 300, 234, key="t1_vel")
         wing_area = st.slider("Wing Surface Area (m²)", 5.0, 100.0, 25.0, key="t1_area")
         alpha_t1 = st.slider("Angle of Attack (degrees)", -5.0, 20.0, 5.0, key="t1_alpha")
         
     with col2:
+        # --- Safety Guard: Restrict altitude to valid troposphere bounds (0 to 11,000 m) ---
+        safe_altitude = max(0.0, min(11000.0, float(altitude_m)))
+        
         # --- Calculations ---
         temp_0 = 288.15 # Sea-level standard temperature (K)
-        temp_k = temp_0 - (0.0065 * altitude_m) # Temperature at altitude
+        temp_k = temp_0 - (0.0065 * safe_altitude) # Temperature at altitude
         
         rho_0 = 1.225   # Sea-level standard density (kg/m^3)
         rho = rho_0 * ((temp_k / temp_0) ** 4.256) # Air density
         
         dynamic_pressure = 0.5 * rho * (velocity_ms ** 2) # Dynamic pressure (Pa)
         
-        # Updated Lift Coefficient using theoretical thin-airfoil slope (~0.11 per degree)
+        # Lift Coefficient using theoretical thin-airfoil slope (~0.11 per degree)
         cl_calculated = 0.11 * alpha_t1 + 0.2
         
         # Lift Force Formula: L = q * S * CL (in Newtons)
         lift_force = dynamic_pressure * wing_area * cl_calculated
         
         # Display Results
+        if altitude_m > 11000:
+            st.warning("⚠️ Altitude exceeds 11,000m troposphere limit. Clamped to 11,000m for ISA calculations.")
+            
         st.metric(label="Calculated Temperature", value=f"{temp_k:.2f} K")
         st.metric(label="Estimated Air Density (rho)", value=f"{rho:.3f} kg/m³")
         st.metric(label="Dynamic Pressure (q)", value=f"{dynamic_pressure:.1f} Pa")
@@ -58,9 +64,9 @@ with tab1:
     # Live Step-by-Step Math Breakdown Section
     st.markdown("---")
     st.subheader("📝 Step-by-Step Calculation Breakdown")
-    st.write("Here is the exact math evaluated live using your current inputs (incorporating theoretical thin-airfoil slope):")
+    st.write("Here is the exact math evaluated live using your current inputs:")
     
-    st.latex(rf"1. \text{{ Temperature: }} T = 288.15 - (0.0065 \times {altitude_m}) = {temp_k:.2f} \text{{ K}}")
+    st.latex(rf"1. \text{{ Temperature: }} T = 288.15 - (0.0065 \times {safe_altitude:.0f}) = {temp_k:.2f} \text{{ K}}")
     st.latex(rf"2. \text{{ Air Density: }} \rho = 1.225 \times \left(\frac{{{temp_k:.2f}}}{{288.15}}\right)^{{4.256}} = {rho:.3f} \text{{ kg/m}}^3")
     st.latex(rf"3. \text{{ Dynamic Pressure: }} q = \frac{1}{2} \times ({rho:.3f}) \times ({velocity_ms})^2 = {dynamic_pressure:.1f} \text{{ Pa}}")
     st.latex(rf"4. \text{{ Lift Coefficient: }} C_L = 0.11 \times ({alpha_t1}) + 0.2 = {cl_calculated:.3f}")
