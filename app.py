@@ -13,23 +13,25 @@ st.markdown("---")
 
 # Create Multi-Tab Layout
 tab1, tab2, tab3 = st.tabs([
-    "🌍 1. Atmosphere & Physics", 
+    "🌍 1. Atmosphere & Lift Force", 
     "🤖 2. Airfoil AI Predictor", 
     "📊 3. Flight Telemetry Analysis"
 ])
 
 # ==========================================
-# TAB 1: ATMOSPHERE & FLIGHT MECHANICS
+# TAB 1: ATMOSPHERE & LIFT FORCE CALCULATOR
 # ==========================================
 with tab1:
-    st.header("Standard Atmosphere & Basic Lift Calculator")
-    st.write("Explore how altitude and airspeed affect atmospheric properties and dynamic pressure.")
+    st.header("Standard Atmosphere & Lift Force Calculator")
+    st.write("Explore how altitude, airspeed, wing area, and angle of attack combine to generate total aerodynamic lift force.")
     
     col1, col2 = st.columns(2)
     
     with col1:
-        altitude_m = st.slider("Altitude (meters)", 0, 11000, 5217)
-        velocity_ms = st.slider("Airspeed (m/s)", 10, 300, 234)
+        altitude_m = st.slider("Altitude (meters)", 0, 11000, 5217, key="t1_alt")
+        velocity_ms = st.slider("Airspeed (m/s)", 10, 300, 234, key="t1_vel")
+        wing_area = st.slider("Wing Surface Area (m²)", 5.0, 100.0, 25.0, key="t1_area")
+        alpha_t1 = st.slider("Angle of Attack (degrees)", -5.0, 20.0, 5.0, key="t1_alpha")
         
     with col2:
         # --- Calculations ---
@@ -41,20 +43,28 @@ with tab1:
         
         dynamic_pressure = 0.5 * rho * (velocity_ms ** 2) # Dynamic pressure (Pa)
         
+        # Approximate Lift Coefficient based on angle of attack: CL = 0.09 * alpha + 0.2
+        cl_calculated = 0.09 * alpha_t1 + 0.2
+        
+        # Lift Force Formula: L = q * S * CL (in Newtons)
+        lift_force = dynamic_pressure * wing_area * cl_calculated
+        
         # Display Results
         st.metric(label="Calculated Temperature", value=f"{temp_k:.2f} K")
         st.metric(label="Estimated Air Density (rho)", value=f"{rho:.3f} kg/m³")
         st.metric(label="Dynamic Pressure (q)", value=f"{dynamic_pressure:.1f} Pa")
+        st.metric(label="Total Lift Force (L)", value=f"{lift_force:,.1f} N")
 
     # Live Step-by-Step Math Breakdown Section
     st.markdown("---")
     st.subheader("📝 Step-by-Step Calculation Breakdown")
-    st.write("Here is the exact math evaluated live using your current slider inputs:")
+    st.write("Here is the exact math evaluated live using your current inputs:")
     
-    # Show equations with substituted values dynamically
     st.latex(rf"1. \text{{ Temperature: }} T = 288.15 - (0.0065 \times {altitude_m}) = {temp_k:.2f} \text{{ K}}")
     st.latex(rf"2. \text{{ Air Density: }} \rho = 1.225 \times \left(\frac{{{temp_k:.2f}}}{{288.15}}\right)^{{4.256}} = {rho:.3f} \text{{ kg/m}}^3")
     st.latex(rf"3. \text{{ Dynamic Pressure: }} q = \frac{1}{2} \times ({rho:.3f}) \times ({velocity_ms})^2 = {dynamic_pressure:.1f} \text{{ Pa}}")
+    st.latex(rf"4. \text{{ Lift Coefficient: }} C_L = 0.09 \times ({alpha_t1}) + 0.2 = {cl_calculated:.3f}")
+    st.latex(rf"5. \text{{ Lift Force: }} L = q \times S \times C_L = {dynamic_pressure:.1f} \times {wing_area} \times {cl_calculated:.3f} = {lift_force:,.1f} \text{{ N}}")
 
 # ==========================================
 # TAB 2: AIRFOIL AI PREDICTOR
@@ -63,7 +73,7 @@ with tab2:
     st.header("Machine Learning Airfoil Performance Predictor")
     st.write("Predict Lift ($C_L$) and Drag ($C_D$) coefficients instantly without running heavy CFD simulations.")
     
-    alpha = st.slider("Angle of Attack (Alpha - degrees)", -5.0, 20.0, 4.0)
+    alpha = st.slider("Angle of Attack (Alpha - degrees)", -5.0, 20.0, 4.0, key="t2_alpha")
     
     cl_pred = 0.09 * alpha + 0.2  
     cd_pred = 0.01 + 0.0005 * (alpha ** 2) 
