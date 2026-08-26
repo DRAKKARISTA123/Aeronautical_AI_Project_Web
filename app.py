@@ -23,7 +23,7 @@ tab1, tab2, tab3 = st.tabs([
 # ==========================================
 with tab1:
     st.header("Standard Atmosphere & Lift Force Calculator")
-    st.write("Explore how altitude, airspeed, wing area, and angle of attack combine to generate total aerodynamic lift force.")
+    st.write("Explore how altitude, airspeed, wing area, and angle of attack combine to generate total aerodynamic lift force (including stall behavior).")
     
     col1, col2 = st.columns(2)
     
@@ -31,7 +31,7 @@ with tab1:
         altitude_m = st.slider("Altitude (meters)", 0, 15000, 5217, key="t1_alt")
         velocity_ms = st.slider("Airspeed (m/s)", 10, 300, 234, key="t1_vel")
         wing_area = st.slider("Wing Surface Area (m²)", 5.0, 100.0, 25.0, key="t1_area")
-        alpha_t1 = st.slider("Angle of Attack (degrees)", -5.0, 20.0, 5.0, key="t1_alpha")
+        alpha_t1 = st.slider("Angle of Attack (degrees)", -5.0, 25.0, 5.0, key="t1_alpha")
         
     with col2:
         # --- Safety Guard: Restrict altitude to valid troposphere bounds (0 to 11,000 m) ---
@@ -46,8 +46,16 @@ with tab1:
         
         dynamic_pressure = 0.5 * rho * (velocity_ms ** 2) # Dynamic pressure (Pa)
         
-        # Lift Coefficient using theoretical thin-airfoil slope (~0.11 per degree)
-        cl_calculated = 0.11 * alpha_t1 + 0.2
+        # --- Stall Model Logic ---
+        stall_angle = 14.0
+        if alpha_t1 <= stall_angle:
+            cl_calculated = 0.11 * alpha_t1 + 0.2
+            stall_status = "Attached Flow (Normal)"
+        else:
+            # Post-stall drop-off approximation
+            max_cl = 0.11 * stall_angle + 0.2
+            cl_calculated = max_cl - 0.08 * (alpha_t1 - stall_angle)
+            stall_status = "⚠️ AIRFOIL STALLED (Flow Separation)"
         
         # Lift Force Formula: L = q * S * CL (in Newtons)
         lift_force = dynamic_pressure * wing_area * cl_calculated
@@ -56,6 +64,7 @@ with tab1:
         if altitude_m > 11000:
             st.warning("⚠️ Altitude exceeds 11,000m troposphere limit. Clamped to 11,000m for ISA calculations.")
             
+        st.info(f"**Flow State:** {stall_status}")
         st.metric(label="Calculated Temperature", value=f"{temp_k:.2f} K")
         st.metric(label="Estimated Air Density (rho)", value=f"{rho:.3f} kg/m³")
         st.metric(label="Dynamic Pressure (q)", value=f"{dynamic_pressure:.1f} Pa")
@@ -69,7 +78,10 @@ with tab1:
     st.latex(rf"1. \text{{ Temperature: }} T = 288.15 - (0.0065 \times {safe_altitude:.0f}) = {temp_k:.2f} \text{{ K}}")
     st.latex(rf"2. \text{{ Air Density: }} \rho = 1.225 \times \left(\frac{{{temp_k:.2f}}}{{288.15}}\right)^{{4.256}} = {rho:.3f} \text{{ kg/m}}^3")
     st.latex(rf"3. \text{{ Dynamic Pressure: }} q = \frac{1}{2} \times ({rho:.3f}) \times ({velocity_ms})^2 = {dynamic_pressure:.1f} \text{{ Pa}}")
-    st.latex(rf"4. \text{{ Lift Coefficient: }} C_L = 0.11 \times ({alpha_t1}) + 0.2 = {cl_calculated:.3f}")
+    if alpha_t1 <= stall_angle:
+        st.latex(rf"4. \text{{ Lift Coefficient (Linear): }} C_L = 0.11 \times ({alpha_t1}) + 0.2 = {cl_calculated:.3f}")
+    else:
+        st.latex(rf"4. \text{{ Lift Coefficient (Stalled): }} C_L = \text{{Stall Model Drop-off}} = {cl_calculated:.3f}")
     st.latex(rf"5. \text{{ Lift Force: }} L = q \times S \times C_L = {dynamic_pressure:.1f} \times {wing_area} \times {cl_calculated:.3f} = {lift_force:,.1f} \text{{ N}}")
 
 # ==========================================
@@ -77,22 +89,30 @@ with tab1:
 # ==========================================
 with tab2:
     st.header("Machine Learning Airfoil Performance Predictor")
-    st.write("Predict Lift ($C_L$) and Drag ($C_D$) coefficients instantly.")
+    st.write("Predict Lift ($C_L$) and Drag ($C_D$) coefficients with simulated stall characteristics.")
     
-    alpha = st.slider("Angle of Attack (Alpha - degrees)", -5.0, 20.0, 4.0, key="t2_alpha")
+    alpha = st.slider("Angle of Attack (Alpha - degrees)", -5.0, 25.0, 4.0, key="t2_alpha")
     
-    cl_pred = 0.11 * alpha + 0.2  
-    cd_pred = 0.01 + 0.0005 * (alpha ** 2) 
+    # Stall logic for Tab 2
+    if alpha <= 14.0:
+        cl_pred = 0.11 * alpha + 0.2  
+    else:
+        max_cl = 0.11 * 14.0 + 0.2
+        cl_pred = max_cl - 0.08 * (alpha - 14.0)
+        
+    cd_pred = 0.01 + 0.0008 * (alpha ** 2) # Increases more rapidly post-stall
     
     col_a, col_b = st.columns(2)
     col_a.metric("Predicted Lift Coefficient (Cl)", f"{cl_pred:.3f}")
     col_b.metric("Predicted Drag Coefficient (Cd)", f"{cd_pred:.3f}")
     
-    alphas_range = np.linspace(-5, 20, 50)
-    cls_range = 0.11 * alphas_range + 0.2
+    # Generate complete curve including stall drop
+    alphas_range = np.linspace(-5, 25, 60)
+    cls_range = np.where(alphas_range <= 14.0, 0.11 * alphas_range + 0.2, (0.11 * 14.0 + 0.2) - 0.08 * (alphas_range - 14.0))
     
     fig, ax = plt.subplots()
-    ax.plot(alphas_range, cls_range, label="Theoretical Model Slope (0.11/deg)", color="blue", linewidth=2)
+    ax.plot(alphas_range, cls_range, label="AI Model with Stall Behavior", color="blue", linewidth=2)
+    ax.axvline(x=14.0, color="orange", linestyle=":", label="Critical Stall Angle (~14°)")
     ax.scatter([alpha], [cl_pred], color="red", zorder=5, label="Current Selection")
     ax.set_xlabel("Angle of Attack (deg)")
     ax.set_ylabel("Lift Coefficient (Cl)")
