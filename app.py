@@ -23,7 +23,7 @@ tab1, tab2, tab3 = st.tabs([
 # ==========================================
 with tab1:
     st.header("Standard Atmosphere & Lift Force Calculator")
-    st.write("Explore how altitude, airspeed, wing area, and angle of attack combine to generate total aerodynamic lift force (including stall behavior).")
+    st.write("Explore how altitude, airspeed, wing area, and angle of attack combine to generate total aerodynamic lift force.")
     
     col1, col2 = st.columns(2)
     
@@ -52,9 +52,9 @@ with tab1:
             cl_calculated = 0.11 * alpha_t1 + 0.2
             stall_status = "Attached Flow (Normal)"
         else:
-            # Post-stall drop-off approximation
             max_cl = 0.11 * stall_angle + 0.2
-            cl_calculated = max_cl - 0.08 * (alpha_t1 - stall_angle)
+            excess_alpha = alpha_t1 - stall_angle
+            cl_calculated = max_cl - 0.015 * (excess_alpha ** 1.5)
             stall_status = "⚠️ AIRFOIL STALLED (Flow Separation)"
         
         # Lift Force Formula: L = q * S * CL (in Newtons)
@@ -81,7 +81,7 @@ with tab1:
     if alpha_t1 <= stall_angle:
         st.latex(rf"4. \text{{ Lift Coefficient (Linear): }} C_L = 0.11 \times ({alpha_t1}) + 0.2 = {cl_calculated:.3f}")
     else:
-        st.latex(rf"4. \text{{ Lift Coefficient (Stalled): }} C_L = \text{{Stall Model Drop-off}} = {cl_calculated:.3f}")
+        st.latex(rf"4. \text{{ Lift Coefficient (Post-Stall Decay): }} C_L = {cl_calculated:.3f}")
     st.latex(rf"5. \text{{ Lift Force: }} L = q \times S \times C_L = {dynamic_pressure:.1f} \times {wing_area} \times {cl_calculated:.3f} = {lift_force:,.1f} \text{{ N}}")
 
 # ==========================================
@@ -89,35 +89,43 @@ with tab1:
 # ==========================================
 with tab2:
     st.header("Machine Learning Airfoil Performance Predictor")
-    st.write("Predict Lift ($C_L$) and Drag ($C_D$) coefficients with simulated stall characteristics.")
+    st.write("Predict Lift ($C_L$) and Drag ($C_D$) coefficients with realistic post-stall physics and drag spiking.")
     
     alpha = st.slider("Angle of Attack (Alpha - degrees)", -5.0, 25.0, 4.0, key="t2_alpha")
     
-    # Stall logic for Tab 2
-    if alpha <= 14.0:
+    # Advanced Stall & Drag Polar Logic
+    stall_angle = 14.0
+    if alpha <= stall_angle:
         cl_pred = 0.11 * alpha + 0.2  
+        cd_pred = 0.008 + 0.045 * (cl_pred ** 2) # Standard parabolic drag polar
     else:
-        max_cl = 0.11 * 14.0 + 0.2
-        cl_pred = max_cl - 0.08 * (alpha - 14.0)
+        max_cl = 0.11 * stall_angle + 0.2
+        excess_alpha = alpha - stall_angle
+        cl_pred = max_cl - 0.015 * (excess_alpha ** 1.5) # Smooth lift drop-off
+        cd_base = 0.008 + 0.045 * (max_cl ** 2)
+        cd_spike = 0.08 * (excess_alpha ** 1.8)         # Sharp drag spike post-stall
+        cd_pred = cd_base + cd_spike
         
-    cd_pred = 0.01 + 0.0008 * (alpha ** 2) # Increases more rapidly post-stall
-    
     col_a, col_b = st.columns(2)
     col_a.metric("Predicted Lift Coefficient (Cl)", f"{cl_pred:.3f}")
     col_b.metric("Predicted Drag Coefficient (Cd)", f"{cd_pred:.3f}")
     
-    # Generate complete curve including stall drop
-    alphas_range = np.linspace(-5, 25, 60)
-    cls_range = np.where(alphas_range <= 14.0, 0.11 * alphas_range + 0.2, (0.11 * 14.0 + 0.2) - 0.08 * (alphas_range - 14.0))
+    # Generate complete curve arrays
+    alphas_range = np.linspace(-5, 25, 100)
+    cls_range = np.where(
+        alphas_range <= stall_angle, 
+        0.11 * alphas_range + 0.2, 
+        (0.11 * stall_angle + 0.2) - 0.015 * ((alphas_range - stall_angle) ** 1.5)
+    )
     
-    fig, ax = plt.subplots()
-    ax.plot(alphas_range, cls_range, label="AI Model with Stall Behavior", color="blue", linewidth=2)
-    ax.axvline(x=14.0, color="orange", linestyle=":", label="Critical Stall Angle (~14°)")
+    fig, ax = plt.subplots(figsize=(8, 4))
+    ax.plot(alphas_range, cls_range, label="Advanced Airfoil Model ($C_L$)", color="blue", linewidth=2)
+    ax.axvline(x=stall_angle, color="orange", linestyle=":", label=f"Critical Stall Angle (~{stall_angle}°)")
     ax.scatter([alpha], [cl_pred], color="red", zorder=5, label="Current Selection")
     ax.set_xlabel("Angle of Attack (deg)")
-    ax.set_ylabel("Lift Coefficient (Cl)")
+    ax.set_ylabel("Lift Coefficient ($C_L$)")
     ax.grid(True, linestyle="--", alpha=0.6)
-    ax.legend()
+    ax.legend(loc="upper left")
     
     st.pyplot(fig)
 
