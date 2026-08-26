@@ -23,20 +23,13 @@ tab1, tab2, tab3 = st.tabs([
 # ==========================================
 with tab1:
     st.header("Standard Atmosphere & Basic Lift Calculator")
-    st.write("Explore how altitude and airspeed affect atmospheric properties and dynamic pressure in real time.")
+    st.write("Explore how altitude and airspeed affect atmospheric properties and dynamic pressure.")
     
     col1, col2 = st.columns(2)
     
     with col1:
         altitude_m = st.slider("Altitude (meters)", 0, 11000, 5217)
         velocity_ms = st.slider("Airspeed (m/s)", 10, 300, 234)
-        
-        # Display the visible formulas used for the calculations
-        st.markdown("---")
-        st.subheader("Formulas Used:")
-        st.latex(r"T = T_0 - (\lambda \cdot h)")
-        st.latex(r"\rho = \rho_0 \cdot \left(\frac{T}{T_0}\right)^{4.256}")
-        st.latex(r"q = \frac{1}{2} \rho V^2")
         
     with col2:
         # --- Calculations ---
@@ -52,6 +45,16 @@ with tab1:
         st.metric(label="Calculated Temperature", value=f"{temp_k:.2f} K")
         st.metric(label="Estimated Air Density (rho)", value=f"{rho:.3f} kg/m³")
         st.metric(label="Dynamic Pressure (q)", value=f"{dynamic_pressure:.1f} Pa")
+
+    # Live Step-by-Step Math Breakdown Section
+    st.markdown("---")
+    st.subheader("📝 Step-by-Step Calculation Breakdown")
+    st.write("Here is the exact math evaluated live using your current slider inputs:")
+    
+    # Show equations with substituted values dynamically
+    st.latex(rf"1. \text{{ Temperature: }} T = 288.15 - (0.0065 \times {altitude_m}) = {temp_k:.2f} \text{{ K}}")
+    st.latex(rf"2. \text{{ Air Density: }} \rho = 1.225 \times \left(\frac{{{temp_k:.2f}}}{{288.15}}\right)^{{4.256}} = {rho:.3f} \text{{ kg/m}}^3")
+    st.latex(rf"3. \text{{ Dynamic Pressure: }} q = \frac{1}{2} \times ({rho:.3f}) \times ({velocity_ms})^2 = {dynamic_pressure:.1f} \text{{ Pa}}")
 
 # ==========================================
 # TAB 2: AIRFOIL AI PREDICTOR
