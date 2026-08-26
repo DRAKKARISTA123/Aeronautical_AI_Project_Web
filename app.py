@@ -11,17 +11,16 @@ st.title("✈️ AeroAI: Data-Driven Flight Workbench")
 st.markdown("##### **Made by: Youssef Lafrem**")
 st.markdown("---")
 
-# Create Multi-Tab Layout FIRST
-tab1, tab2, tab3 = st.tabs([
+# Create Multi-Tab Layout (Reduced to 2 Tabs)
+tab1, tab2 = st.tabs([
     "🌍 1. Atmosphere & Lift Force", 
-    "📈 2. XFOIL Polar Interpolator", 
-    "📊 3. Flight Telemetry Analysis"
+    "📈 2. XFOIL Polar Interpolator"
 ])
 
 # ==========================================
 # AIRFOILTOOLS XFOIL POLAR SUBSET (Re=1M, Ncrit=9)
 # ==========================================
-# True source-verified dataset from AirfoilTools XFOIL polar with authentic convergence gap at 2.25°/2.5°
+# True source-verified dataset from AirfoilTools XFOIL polar with authentic convergence gap at 2.25°–2.5°
 naca_alphas = np.array([
     -4.00, -3.75, -3.50, -3.25, -3.00, -2.75, -2.50, -2.25, -2.00, -1.75, -1.50, -1.25, -1.00, -0.75, -0.50, -0.25,
     0.00, 0.25, 0.50, 0.75, 1.00, 1.25, 1.50, 1.75, 2.00, 2.75, 3.00, 3.25, 3.50, 3.75,
@@ -172,22 +171,3 @@ with tab2:
     st.markdown("**Active Lookup Evaluation:**")
     st.latex(rf"C_L = \text{{np.interp}}(\alpha = {alpha:.1f}^\circ) \rightarrow \mathbf{{{cl_pred:.3f}}}")
     st.latex(rf"C_D = \text{{np.interp}}(\alpha = {alpha:.1f}^\circ) \rightarrow \mathbf{{{cd_pred:.3f}}}")
-
-# ==========================================
-# TAB 3: FLIGHT TELEMETRY ANALYSIS
-# ==========================================
-with tab3:
-    st.header("Flight Data & Telemetry Explorer")
-    st.write("Analyze performance trends using sample flight logs.")
-    
-    time_sec = np.arange(0, 100, 1)
-    altitude_log = 1000 + 50 * time_sec - 0.2 * (time_sec ** 2)
-    
-    df_telemetry = pd.DataFrame({
-        "Time (s)": time_sec,
-        "Altitude (m)": altitude_log,
-        "Engine Temp (C)": 400 + np.random.normal(0, 5, len(time_sec))
-    })
-    
-    st.dataframe(df_telemetry.head(10))
-    st.line_chart(df_telemetry.set_index("Time (s)")["Altitude (m)"])
