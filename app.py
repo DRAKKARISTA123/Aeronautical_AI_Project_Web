@@ -1,3 +1,74 @@
+import streamlit as st
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Page Configuration
+st.set_page_config(page_title="AeroAI Workbench", page_icon="✈️", layout="wide")
+
+# Personal Branding Header
+st.title("✈️ AeroAI: Data-Driven Flight Workbench")
+st.markdown("##### **Made by: Youssef Lafrem**")
+st.markdown("---")
+
+# Create Multi-Tab Layout FIRST (Before any 'with tabX:' blocks)
+tab1, tab2, tab3 = st.tabs([
+    "🌍 1. Atmosphere & Lift Force", 
+    "🤖 2. Airfoil AI Predictor", 
+    "📊 3. Flight Telemetry Analysis"
+])
+
+# ==========================================
+# TAB 1: ATMOSPHERE & LIFT FORCE CALCULATOR
+# ==========================================
+with tab1:
+    st.header("Standard Atmosphere & Lift Force Calculator")
+    st.write("Explore how altitude, airspeed, wing area, and angle of attack combine to generate total aerodynamic lift force.")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        altitude_m = st.slider("Altitude (meters)", 0, 15000, 5217, key="t1_alt")
+        velocity_ms = st.slider("Airspeed (m/s)", 10, 300, 234, key="t1_vel")
+        wing_area = st.slider("Wing Surface Area (m²)", 5.0, 100.0, 25.0, key="t1_area")
+        alpha_t1 = st.slider("Angle of Attack (degrees)", -4.0, 20.0, 5.0, key="t1_alpha")
+        
+    with col2:
+        # Safety Guard: Restrict altitude to valid troposphere bounds (0 to 11,000 m)
+        safe_altitude = max(0.0, min(11000.0, float(altitude_m)))
+        
+        temp_0 = 288.15 
+        temp_k = temp_0 - (0.0065 * safe_altitude)
+        rho_0 = 1.225   
+        rho = rho_0 * ((temp_k / temp_0) ** 4.256)
+        dynamic_pressure = 0.5 * rho * (velocity_ms ** 2)
+        
+        # Empirical Lookups for Tab 1 Calculations
+        naca_alphas = np.array([-4.0, -2.0, 0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 15.0, 16.0, 18.0, 20.0])
+        naca_cls    = np.array([-0.22, 0.00, 0.25, 0.48, 0.70, 0.92, 1.14, 1.35, 1.55, 1.71, 1.68, 1.55, 1.25, 0.95])
+        
+        cl_calculated = float(np.interp(alpha_t1, naca_alphas, naca_cls))
+        stall_status = "Attached Flow (Normal Operating Range)" if alpha_t1 <= 14.0 else "⚠️ AIRFOIL STALLED (Experimental Flow Separation)"
+        
+        lift_force = dynamic_pressure * wing_area * cl_calculated
+        
+        if altitude_m > 11000:
+            st.warning("⚠️ Altitude exceeds 11,000m troposphere limit. Clamped to 11,000m for ISA calculations.")
+            
+        st.info(f"**Flow State:** {stall_status}")
+        st.metric(label="Calculated Temperature", value=f"{temp_k:.2f} K")
+        st.metric(label="Estimated Air Density (rho)", value=f"{rho:.3f} kg/m³")
+        st.metric(label="Dynamic Pressure (q)", value=f"{dynamic_pressure:.1f} Pa")
+        st.metric(label="Total Lift Force (L)", value=f"{lift_force:,.1f} N")
+
+    st.markdown("---")
+    st.subheader("📝 Step-by-Step Calculation Breakdown")
+    st.latex(rf"1. \text{{ Temperature: }} T = 288.15 - (0.0065 \times {safe_altitude:.0f}) = {temp_k:.2f} \text{{ K}}")
+    st.latex(rf"2. \text{{ Air Density: }} \rho = 1.225 \times \left(\frac{{{temp_k:.2f}}}{{288.15}}\right)^{{4.256}} = {rho:.3f} \text{{ kg/m}}^3")
+    st.latex(rf"3. \text{{ Dynamic Pressure: }} q = \frac{1}{2} \times ({rho:.3f}) \times ({velocity_ms})^2 = {dynamic_pressure:.1f} \text{{ Pa}}")
+    st.latex(rf"4. \text{{ Lift Coefficient (Empirical Table Interpolation): }} C_L(\alpha={alpha_t1:.1f}^\circ) = {cl_calculated:.3f}")
+    st.latex(rf"5. \text{{ Lift Force: }} L = q \times S \times C_L = {dynamic_pressure:.1f} \times {wing_area} \times {cl_calculated:.3f} = {lift_force:,.1f} \text{{ N}}")
+
 # ==========================================
 # TAB 2: AIRFOIL AI PREDICTOR (EMPIRICAL LOOKUP)
 # ==========================================
@@ -55,3 +126,22 @@ with tab2:
     st.markdown("**Active Lookup Evaluation:**")
     st.latex(rf"C_L = \text{{np.interp}}(\alpha = {alpha:.1f}^\circ) \rightarrow \mathbf{{{cl_pred:.3f}}}")
     st.latex(rf"C_D = \text{{np.interp}}(\alpha = {alpha:.1f}^\circ) \rightarrow \mathbf{{{cd_pred:.3f}}}")
+
+# ==========================================
+# TAB 3: FLIGHT TELEMETRY ANALYSIS
+# ==========================================
+with tab3:
+    st.header("Flight Data & Telemetry Explorer")
+    st.write("Analyze performance trends using sample flight logs.")
+    
+    time_sec = np.arange(0, 100, 1)
+    altitude_log = 1000 + 50 * time_sec - 0.2 * (time_sec ** 2)
+    
+    df_telemetry = pd.DataFrame({
+        "Time (s)": time_sec,
+        "Altitude (m)": altitude_log,
+        "Engine Temp (C)": 400 + np.random.normal(0, 5, len(time_sec))
+    })
+    
+    st.dataframe(df_telemetry.head(10))
+    st.line_chart(df_telemetry.set_index("Time (s)")["Altitude (m)"])
