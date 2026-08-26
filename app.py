@@ -43,8 +43,8 @@ with tab1:
         
         dynamic_pressure = 0.5 * rho * (velocity_ms ** 2) # Dynamic pressure (Pa)
         
-        # Approximate Lift Coefficient based on angle of attack: CL = 0.09 * alpha + 0.2
-        cl_calculated = 0.09 * alpha_t1 + 0.2
+        # Updated Lift Coefficient using theoretical thin-airfoil slope (~0.11 per degree)
+        cl_calculated = 0.11 * alpha_t1 + 0.2
         
         # Lift Force Formula: L = q * S * CL (in Newtons)
         lift_force = dynamic_pressure * wing_area * cl_calculated
@@ -58,12 +58,12 @@ with tab1:
     # Live Step-by-Step Math Breakdown Section
     st.markdown("---")
     st.subheader("📝 Step-by-Step Calculation Breakdown")
-    st.write("Here is the exact math evaluated live using your current inputs:")
+    st.write("Here is the exact math evaluated live using your current inputs (incorporating theoretical thin-airfoil slope):")
     
     st.latex(rf"1. \text{{ Temperature: }} T = 288.15 - (0.0065 \times {altitude_m}) = {temp_k:.2f} \text{{ K}}")
     st.latex(rf"2. \text{{ Air Density: }} \rho = 1.225 \times \left(\frac{{{temp_k:.2f}}}{{288.15}}\right)^{{4.256}} = {rho:.3f} \text{{ kg/m}}^3")
     st.latex(rf"3. \text{{ Dynamic Pressure: }} q = \frac{1}{2} \times ({rho:.3f}) \times ({velocity_ms})^2 = {dynamic_pressure:.1f} \text{{ Pa}}")
-    st.latex(rf"4. \text{{ Lift Coefficient: }} C_L = 0.09 \times ({alpha_t1}) + 0.2 = {cl_calculated:.3f}")
+    st.latex(rf"4. \text{{ Lift Coefficient: }} C_L = 0.11 \times ({alpha_t1}) + 0.2 = {cl_calculated:.3f}")
     st.latex(rf"5. \text{{ Lift Force: }} L = q \times S \times C_L = {dynamic_pressure:.1f} \times {wing_area} \times {cl_calculated:.3f} = {lift_force:,.1f} \text{{ N}}")
 
 # ==========================================
@@ -71,11 +71,11 @@ with tab1:
 # ==========================================
 with tab2:
     st.header("Machine Learning Airfoil Performance Predictor")
-    st.write("Predict Lift ($C_L$) and Drag ($C_D$) coefficients instantly without running heavy CFD simulations.")
+    st.write("Predict Lift ($C_L$) and Drag ($C_D$) coefficients instantly.")
     
     alpha = st.slider("Angle of Attack (Alpha - degrees)", -5.0, 20.0, 4.0, key="t2_alpha")
     
-    cl_pred = 0.09 * alpha + 0.2  
+    cl_pred = 0.11 * alpha + 0.2  
     cd_pred = 0.01 + 0.0005 * (alpha ** 2) 
     
     col_a, col_b = st.columns(2)
@@ -83,10 +83,10 @@ with tab2:
     col_b.metric("Predicted Drag Coefficient (Cd)", f"{cd_pred:.3f}")
     
     alphas_range = np.linspace(-5, 20, 50)
-    cls_range = 0.09 * alphas_range + 0.2
+    cls_range = 0.11 * alphas_range + 0.2
     
     fig, ax = plt.subplots()
-    ax.plot(alphas_range, cls_range, label="AI Model Prediction", color="blue", linewidth=2)
+    ax.plot(alphas_range, cls_range, label="Theoretical Model Slope (0.11/deg)", color="blue", linewidth=2)
     ax.scatter([alpha], [cl_pred], color="red", zorder=5, label="Current Selection")
     ax.set_xlabel("Angle of Attack (deg)")
     ax.set_ylabel("Lift Coefficient (Cl)")
