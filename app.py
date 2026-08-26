@@ -11,7 +11,7 @@ st.title("✈️ AeroAI: Data-Driven Flight Workbench")
 st.markdown("##### **Made by: Youssef Lafrem**")
 st.markdown("---")
 
-# Create Multi-Tab Layout based on Engineering Principles
+# Create Multi-Tab Layout
 tab1, tab2, tab3 = st.tabs([
     "🌍 1. Atmosphere & Physics", 
     "🤖 2. Airfoil AI Predictor", 
@@ -23,23 +23,33 @@ tab1, tab2, tab3 = st.tabs([
 # ==========================================
 with tab1:
     st.header("Standard Atmosphere & Basic Lift Calculator")
-    st.write("Calculate fundamental aerodynamic properties using classic textbook formulas (Anderson, *Introduction to Flight*).")
+    st.write("Calculations based on the ISA Troposphere model (John Anderson, *Introduction to Flight*).")
     
     col1, col2 = st.columns(2)
     
     with col1:
-        altitude_m = st.slider("Altitude (meters)", 0, 11000, 1000)
-        velocity_ms = st.slider("Airspeed (m/s)", 10, 300, 100)
+        altitude_m = st.slider("Altitude (meters)", 0, 11000, 5217)
+        velocity_ms = st.slider("Airspeed (m/s)", 10, 300, 234)
         
     with col2:
-        # Simple troposphere approximation for density
-        temp_0 = 288.15 # Kelvin at sea level
-        rho_0 = 1.225   # kg/m^3 at sea level
+        # --- FORMULA 1: Temperature at Altitude ---
+        # T = T_0 - (lambda * h)
+        # T_0 = 288.15 K, lambda = 0.0065 K/m
+        temp_0 = 288.15 
         temp_k = temp_0 - (0.0065 * altitude_m)
-        rho = rho_0 * ((temp_k / temp_0) ** 4.256) # Air density approximation
         
+        # --- FORMULA 2: Air Density (ISA Troposphere) ---
+        # rho = rho_0 * (T / T_0) ** 4.256
+        # rho_0 = 1.225 kg/m^3
+        rho_0 = 1.225   
+        rho = rho_0 * ((temp_k / temp_0) ** 4.256) 
+        
+        # --- FORMULA 3: Dynamic Pressure ---
+        # q = 0.5 * rho * V^2
         dynamic_pressure = 0.5 * rho * (velocity_ms ** 2)
         
+        # Display Results
+        st.metric(label="Calculated Temperature", value=f"{temp_k:.2f} K")
         st.metric(label="Estimated Air Density (rho)", value=f"{rho:.3f} kg/m³")
         st.metric(label="Dynamic Pressure (q)", value=f"{dynamic_pressure:.1f} Pa")
 
@@ -52,17 +62,15 @@ with tab2:
     
     alpha = st.slider("Angle of Attack (Alpha - degrees)", -5.0, 20.0, 4.0)
     
-    # Mock AI / Physics-informed calculation for demo purposes
-    # In a later step, we will plug a trained scikit-learn model here!
-    cl_pred = 0.09 * alpha + 0.2  # Simplified lift curve slope approximation
-    cd_pred = 0.01 + 0.0005 * (alpha ** 2) # Induced drag approximation
+    # Physics-informed mock AI calculations
+    cl_pred = 0.09 * alpha + 0.2  
+    cd_pred = 0.01 + 0.0005 * (alpha ** 2) 
     
     col_a, col_b = st.columns(2)
     col_a.metric("Predicted Lift Coefficient (Cl)", f"{cl_pred:.3f}")
     col_b.metric("Predicted Drag Coefficient (Cd)", f"{cd_pred:.3f}")
     
-    # Generate a dynamic Lift Curve Slope plot
-    st.subheading = "Lift Curve Preview"
+    # Generate Lift Curve Slope plot
     alphas_range = np.linspace(-5, 20, 50)
     cls_range = 0.09 * alphas_range + 0.2
     
@@ -81,9 +89,8 @@ with tab2:
 # ==========================================
 with tab3:
     st.header("Flight Data & Telemetry Explorer")
-    st.write("Upload or preview flight sensor logs to analyze performance trends (Data-Driven Engineering approach).")
+    st.write("Analyze performance trends using sample flight logs.")
     
-    # Generate mock flight log data for demonstration
     time_sec = np.arange(0, 100, 1)
     altitude_log = 1000 + 50 * time_sec - 0.2 * (time_sec ** 2)
     
@@ -94,6 +101,4 @@ with tab3:
     })
     
     st.dataframe(df_telemetry.head(10))
-    
-    # Plot telemetry
     st.line_chart(df_telemetry.set_index("Time (s)")["Altitude (m)"])
